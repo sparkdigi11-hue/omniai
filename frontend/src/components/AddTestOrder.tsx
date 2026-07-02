@@ -14,7 +14,7 @@ export default function AddTestOrder() {
       }),
     });
 
-    alert("Request sent!");
+    window.location.reload();
   }
 
   return (

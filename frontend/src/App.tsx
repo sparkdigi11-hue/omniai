@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Papa from "papaparse";
 import AddTestOrder from "./components/AddTestOrder";
 import {
   Bell,
@@ -68,28 +67,7 @@ export default function App() {
     ["Billing", CreditCard],
   ];
 
-  function handleCSV(file: File) {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (result) => {
-        const rows = result.data as Record<string, string>[];
 
-        const cleanOrders: Order[] = rows.map((row, index) => ({
-          id: index + 1,
-          name: row.name || row.Name || "Unknown",
-          phone: row.phone || row.Phone || row.telephone || "",
-          product: row.product || row.Product || "Product",
-          city: row.city || row.City || "",
-          price: row.price || row.Price || "",
-          status: "Ready",
-        }));
-
-        setOrders(cleanOrders);
-        setStarted(false);
-      },
-    });
-  }
 
   function startAutoCalls() {
     setStarted(true);
@@ -195,10 +173,24 @@ export default function App() {
                   type="file"
                   accept=".csv"
                   className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) handleCSV(file);
-                  }}
+                  onChange={async (event) => {
+  const file = event.target.files?.[0];
+
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  await fetch("http://localhost:4000/csv/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  const response = await fetch("http://localhost:4000/orders");
+  const data = await response.json();
+
+  setOrders(data);
+}}
                 />
               </label>
             </div>
