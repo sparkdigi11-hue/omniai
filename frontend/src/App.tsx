@@ -18,7 +18,12 @@ import {
   Users,
   Workflow,
   Play,
+  BookOpen,
+  Package,
+  ShieldCheck,
+  Mic,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 type Order = {
   id: number;
@@ -30,19 +35,23 @@ type Order = {
   status: string;
 };
 
+type MenuItem = [string, LucideIcon];
+
 export default function App() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [started, setStarted] = useState(false);
 
-  const menu = [
+  const menu: MenuItem[] = [
     ["Dashboard", Brain],
-    ["AI Agents", Bot],
+    ["AI Employees", Bot],
+    ["Knowledge Base", BookOpen],
+    ["Orders", Package],
+    ["Products", FileSpreadsheet],
     ["Calls", Phone],
     ["WhatsApp", MessageCircle],
     ["Instagram", Globe],
     ["Email", Mail],
     ["Workflows", Workflow],
-    ["CSV / Excel", FileSpreadsheet],
     ["API", Plug],
     ["Team", Users],
     ["Billing", CreditCard],
@@ -89,16 +98,20 @@ export default function App() {
     );
   }
 
+  const confirmed = orders.filter((order) => order.status === "Confirmed").length;
+  const noAnswer = orders.filter((order) => order.status === "No Answer").length;
+  const callback = orders.filter((order) => order.status === "Callback").length;
+
   return (
     <div className="min-h-screen bg-[#0b0b0c] text-white">
       <aside className="fixed left-0 top-0 h-screen w-[230px] overflow-y-auto border-r border-white/10 bg-[#0f0f10] p-4">
         <div className="px-2 py-4">
           <h1 className="text-xl font-semibold tracking-tight">OmniAI</h1>
-          <p className="mt-1 text-xs text-zinc-500">AI workspace</p>
+          <p className="mt-1 text-xs text-zinc-500">AI Employee Platform</p>
         </div>
 
         <nav className="mt-4 space-y-1 pb-8">
-          {menu.map(([label, Icon]: any, index) => (
+          {menu.map(([label, Icon], index) => (
             <button
               key={label}
               className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
@@ -118,7 +131,7 @@ export default function App() {
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-white/10 bg-[#0b0b0c]/90 px-7 backdrop-blur">
           <div className="flex w-[460px] items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-zinc-500">
             <Search size={16} />
-            Search workflows, contacts, calls...
+            Search orders, employees, calls...
           </div>
 
           <div className="flex items-center gap-4">
@@ -131,16 +144,33 @@ export default function App() {
         </header>
 
         <section className="mx-auto max-w-6xl px-8 py-12">
-          <p className="text-sm text-zinc-500">AI Confirmation System</p>
+          <p className="text-sm text-zinc-500">AI Communication Platform</p>
 
           <h2 className="mt-5 max-w-4xl text-5xl font-semibold leading-tight tracking-tight">
             Import orders. OmniAI confirms them automatically.
           </h2>
 
+          <div className="mt-8 grid grid-cols-4 gap-4">
+            {[
+              ["Imported orders", orders.length],
+              ["Confirmed", confirmed],
+              ["No answer", noAnswer],
+              ["Callback", callback],
+            ].map(([title, value]) => (
+              <div
+                key={title}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+              >
+                <p className="text-sm text-zinc-500">{title}</p>
+                <h3 className="mt-3 text-3xl font-semibold">{value}</h3>
+              </div>
+            ))}
+          </div>
+
           <div className="mt-8 rounded-3xl border border-white/10 bg-[#121214] p-5">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h3 className="text-lg font-medium">Upload CSV / Excel export</h3>
+                <h3 className="text-lg font-medium">Upload orders</h3>
                 <p className="mt-1 text-sm text-zinc-500">
                   Required columns: name, phone, product, city, price
                 </p>
@@ -153,8 +183,8 @@ export default function App() {
                   type="file"
                   accept=".csv"
                   className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
                     if (file) handleCSV(file);
                   }}
                 />
@@ -172,21 +202,48 @@ export default function App() {
             )}
           </div>
 
-          <div className="mt-8 grid grid-cols-4 gap-4">
-            {[
-              ["Imported orders", orders.length],
-              ["Confirmed", orders.filter((o) => o.status === "Confirmed").length],
-              ["No answer", orders.filter((o) => o.status === "No Answer").length],
-              ["Callback", orders.filter((o) => o.status === "Callback").length],
-            ].map(([title, value]) => (
-              <div
-                key={title}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
-              >
-                <p className="text-sm text-zinc-500">{title}</p>
-                <h3 className="mt-3 text-3xl font-semibold">{value}</h3>
+          <div className="mt-8 grid grid-cols-3 gap-4">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+              <div className="flex items-center gap-3">
+                <Bot size={20} />
+                <h3 className="text-lg font-medium">AI Employees</h3>
               </div>
-            ))}
+              <p className="mt-3 text-sm leading-6 text-zinc-500">
+                Create AI employees for confirmation, sales, support, and
+                follow-up calls.
+              </p>
+              <button className="mt-5 rounded-xl bg-white px-4 py-2 text-sm font-medium text-black">
+                + Hire AI Employee
+              </button>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+              <div className="flex items-center gap-3">
+                <BookOpen size={20} />
+                <h3 className="text-lg font-medium">Knowledge Base</h3>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-zinc-500">
+                Add products, FAQ, delivery rules, store policies, and forbidden
+                answers.
+              </p>
+              <button className="mt-5 rounded-xl border border-white/10 px-4 py-2 text-sm text-zinc-300">
+                Train AI
+              </button>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+              <div className="flex items-center gap-3">
+                <Mic size={20} />
+                <h3 className="text-lg font-medium">Voice AI</h3>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-zinc-500">
+                AI speaks with customers, answers questions, confirms orders,
+                and writes summaries.
+              </p>
+              <button className="mt-5 rounded-xl border border-white/10 px-4 py-2 text-sm text-zinc-300">
+                Configure Voice
+              </button>
+            </div>
           </div>
 
           <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
@@ -231,7 +288,15 @@ export default function App() {
                         <td className="p-3">
                           <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs">
                             {order.status === "Confirmed" ? (
-                              <CheckCircle2 size={14} className="text-[#10A37F]" />
+                              <CheckCircle2
+                                size={14}
+                                className="text-[#10A37F]"
+                              />
+                            ) : order.status === "Ready" ? (
+                              <ShieldCheck
+                                size={14}
+                                className="text-zinc-500"
+                              />
                             ) : (
                               <Clock3 size={14} className="text-zinc-500" />
                             )}
