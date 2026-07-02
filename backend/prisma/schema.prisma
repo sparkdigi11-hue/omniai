@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  customers  Customer[]
+  orders     Order[]
+  employees  AIEmployee[]
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  phone       String
+  city        String?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  orders    Order[]
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  workspaceId String
+  customerId  String
+  product     String
+  price       String?
+  status      String   @default("Pending")
+  aiSummary   String?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  customer  Customer  @relation(fields: [customerId], references: [id])
+}
+
+model AIEmployee {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  role        String
+  language    String
+  status      String   @default("Online")
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+}
