@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Papa from "papaparse";
 import AddTestOrder from "./components/AddTestOrder";
 import {
@@ -41,6 +41,16 @@ type MenuItem = [string, LucideIcon];
 export default function App() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [started, setStarted] = useState(false);
+  useEffect(() => {
+  async function loadOrders() {
+    const response = await fetch("http://localhost:4000/orders");
+    const data = await response.json();
+    setOrders(data);
+    console.log(data);
+  }
+
+  loadOrders();
+}, []);
 
   const menu: MenuItem[] = [
     ["Dashboard", Brain],
