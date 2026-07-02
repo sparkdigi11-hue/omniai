@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Papa from "papaparse";
+import AddTestOrder from "./components/AddTestOrder";
 import {
   Bell,
   Bot,
@@ -168,6 +169,7 @@ export default function App() {
           </div>
 
           <div className="mt-8 rounded-3xl border border-white/10 bg-[#121214] p-5">
+          <AddTestOrder />
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg font-medium">Upload orders</h3>
