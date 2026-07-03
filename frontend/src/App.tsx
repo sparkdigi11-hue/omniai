@@ -26,13 +26,15 @@ import {
 import type { LucideIcon } from "lucide-react";
 
 type Order = {
-  id: number;
-  name: string;
-  phone: string;
+  id: string;
   product: string;
-  city: string;
   price: string;
   status: string;
+  customer: {
+    name: string;
+    phone: string;
+    city: string;
+  };
 };
 
 type MenuItem = [string, LucideIcon];
@@ -40,6 +42,7 @@ type MenuItem = [string, LucideIcon];
 export default function App() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [started, setStarted] = useState(false);
+  const [search, setSearch] = useState("");
   useEffect(() => {
   async function loadOrders() {
     const response = await fetch("http://localhost:4000/orders");
@@ -90,6 +93,16 @@ export default function App() {
   const confirmed = orders.filter((order) => order.status === "Confirmed").length;
   const noAnswer = orders.filter((order) => order.status === "No Answer").length;
   const callback = orders.filter((order) => order.status === "Callback").length;
+  const filteredOrders = orders.filter((order) => {
+  const q = search.toLowerCase();
+
+  return (
+    (order.customer?.name ?? "").toLowerCase().includes(q) ||
+    (order.customer?.phone ?? "").toLowerCase().includes(q) ||
+    (order.product ?? "").toLowerCase().includes(q) ||
+    (order.customer?.city ?? "").toLowerCase().includes(q)
+  );
+});
 
   return (
     <div className="min-h-screen bg-[#0b0b0c] text-white">
@@ -118,10 +131,17 @@ export default function App() {
 
       <main className="ml-[230px] min-h-screen">
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-white/10 bg-[#0b0b0c]/90 px-7 backdrop-blur">
-          <div className="flex w-[460px] items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-zinc-500">
-            <Search size={16} />
-            Search orders, employees, calls...
-          </div>
+          <div className="flex w-[460px] items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2">
+  <Search size={16} className="text-zinc-500" />
+
+  <input
+    type="text"
+    placeholder="Search orders..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="w-full bg-transparent text-sm outline-none placeholder:text-zinc-500"
+  />
+</div>
 
           <div className="flex items-center gap-4">
             <button className="rounded-full bg-white px-4 py-2 text-sm font-medium text-black">
@@ -258,8 +278,8 @@ export default function App() {
               </p>
             </div>
 
-            <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
-              <table className="w-full text-left text-sm">
+            <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
+              <table className="min-w-[900px] w-full text-left text-sm">
                 <thead className="bg-white/[0.04] text-zinc-500">
                   <tr>
                     <th className="p-3">Name</th>
@@ -272,23 +292,20 @@ export default function App() {
                 </thead>
 
                 <tbody>
-                  {orders.length === 0 ? (
-                    <tr>
+{filteredOrders.length === 0 ? (                    <tr>
                       <td colSpan={6} className="p-6 text-center text-zinc-500">
                         Upload a CSV file to start.
                       </td>
                     </tr>
                   ) : (
-                    orders.map((order) => (
-                      <tr
+filteredOrders.map((order) => (                      <tr
                         key={order.id}
                         className="border-t border-white/10 text-zinc-300"
                       >
-                        <td className="p-3">{order.name}</td>
-                        <td className="p-3">{order.phone}</td>
+                        <td className="p-3">{order.customer?.name}</td>
+<td className="p-3">{order.customer?.phone}</td>
                         <td className="p-3">{order.product}</td>
-                        <td className="p-3">{order.city}</td>
-                        <td className="p-3">{order.price}</td>
+<td className="p-3">{order.customer?.city}</td>                        <td className="p-3">{order.price}</td>
                         <td className="p-3">
                           <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs">
                             {order.status === "Confirmed" ? (
