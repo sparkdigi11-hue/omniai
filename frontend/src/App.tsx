@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import AddTestOrder from "./components/AddTestOrder";
+import OrdersTable from "./components/OrdersTable";
 import {
   Bell,
   Bot,
   Brain,
-  CheckCircle2,
-  Clock3,
   CreditCard,
   FileSpreadsheet,
   Globe,
   Mail,
   MessageCircle,
+  Mic,
   Phone,
   Plug,
   Search,
@@ -20,8 +20,6 @@ import {
   Play,
   BookOpen,
   Package,
-  ShieldCheck,
-  Mic,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -30,10 +28,10 @@ type Order = {
   product: string;
   price: string;
   status: string;
-  customer: {
-    name: string;
-    phone: string;
-    city: string;
+  customer?: {
+    name?: string;
+    phone?: string;
+    city?: string;
   };
 };
 
@@ -43,16 +41,16 @@ export default function App() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [started, setStarted] = useState(false);
   const [search, setSearch] = useState("");
-  useEffect(() => {
-  async function loadOrders() {
-    const response = await fetch("http://localhost:4000/orders");
-    const data = await response.json();
-    setOrders(data);
-    console.log(data);
-  }
 
-  loadOrders();
-}, []);
+  useEffect(() => {
+    async function loadOrders() {
+      const response = await fetch("http://localhost:4000/orders");
+      const data = await response.json();
+      setOrders(data);
+    }
+
+    loadOrders();
+  }, []);
 
   const menu: MenuItem[] = [
     ["Dashboard", Brain],
@@ -69,8 +67,6 @@ export default function App() {
     ["Team", Users],
     ["Billing", CreditCard],
   ];
-
-
 
   function startAutoCalls() {
     setStarted(true);
@@ -93,16 +89,17 @@ export default function App() {
   const confirmed = orders.filter((order) => order.status === "Confirmed").length;
   const noAnswer = orders.filter((order) => order.status === "No Answer").length;
   const callback = orders.filter((order) => order.status === "Callback").length;
-  const filteredOrders = orders.filter((order) => {
-  const q = search.toLowerCase();
 
-  return (
-    (order.customer?.name ?? "").toLowerCase().includes(q) ||
-    (order.customer?.phone ?? "").toLowerCase().includes(q) ||
-    (order.product ?? "").toLowerCase().includes(q) ||
-    (order.customer?.city ?? "").toLowerCase().includes(q)
-  );
-});
+  const filteredOrders = orders.filter((order) => {
+    const q = search.toLowerCase();
+
+    return (
+      (order.customer?.name ?? "").toLowerCase().includes(q) ||
+      (order.customer?.phone ?? "").toLowerCase().includes(q) ||
+      (order.product ?? "").toLowerCase().includes(q) ||
+      (order.customer?.city ?? "").toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-[#0b0b0c] text-white">
@@ -132,16 +129,15 @@ export default function App() {
       <main className="ml-[230px] min-h-screen">
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-white/10 bg-[#0b0b0c]/90 px-7 backdrop-blur">
           <div className="flex w-[460px] items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2">
-  <Search size={16} className="text-zinc-500" />
-
-  <input
-    type="text"
-    placeholder="Search orders..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    className="w-full bg-transparent text-sm outline-none placeholder:text-zinc-500"
-  />
-</div>
+            <Search size={16} className="text-zinc-500" />
+            <input
+              type="text"
+              placeholder="Search orders..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-transparent text-sm outline-none placeholder:text-zinc-500"
+            />
+          </div>
 
           <div className="flex items-center gap-4">
             <button className="rounded-full bg-white px-4 py-2 text-sm font-medium text-black">
@@ -177,8 +173,9 @@ export default function App() {
           </div>
 
           <div className="mt-8 rounded-3xl border border-white/10 bg-[#121214] p-5">
-          <AddTestOrder />
-            <div className="flex items-center justify-between gap-4">
+            <AddTestOrder />
+
+            <div className="mt-5 flex items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg font-medium">Upload orders</h3>
                 <p className="mt-1 text-sm text-zinc-500">
@@ -194,23 +191,23 @@ export default function App() {
                   accept=".csv"
                   className="hidden"
                   onChange={async (event) => {
-  const file = event.target.files?.[0];
+                    const file = event.target.files?.[0];
 
-  if (!file) return;
+                    if (!file) return;
 
-  const formData = new FormData();
-  formData.append("file", file);
+                    const formData = new FormData();
+                    formData.append("file", file);
 
-  await fetch("http://localhost:4000/csv/upload", {
-    method: "POST",
-    body: formData,
-  });
+                    await fetch("http://localhost:4000/csv/upload", {
+                      method: "POST",
+                      body: formData,
+                    });
 
-  const response = await fetch("http://localhost:4000/orders");
-  const data = await response.json();
+                    const response = await fetch("http://localhost:4000/orders");
+                    const data = await response.json();
 
-  setOrders(data);
-}}
+                    setOrders(data);
+                  }}
                 />
               </label>
             </div>
@@ -233,8 +230,7 @@ export default function App() {
                 <h3 className="text-lg font-medium">AI Employees</h3>
               </div>
               <p className="mt-3 text-sm leading-6 text-zinc-500">
-                Create AI employees for confirmation, sales, support, and
-                follow-up calls.
+                Create AI employees for confirmation, sales, support, and follow-up calls.
               </p>
               <button className="mt-5 rounded-xl bg-white px-4 py-2 text-sm font-medium text-black">
                 + Hire AI Employee
@@ -247,8 +243,7 @@ export default function App() {
                 <h3 className="text-lg font-medium">Knowledge Base</h3>
               </div>
               <p className="mt-3 text-sm leading-6 text-zinc-500">
-                Add products, FAQ, delivery rules, store policies, and forbidden
-                answers.
+                Add products, FAQ, delivery rules, store policies, and forbidden answers.
               </p>
               <button className="mt-5 rounded-xl border border-white/10 px-4 py-2 text-sm text-zinc-300">
                 Train AI
@@ -261,8 +256,7 @@ export default function App() {
                 <h3 className="text-lg font-medium">Voice AI</h3>
               </div>
               <p className="mt-3 text-sm leading-6 text-zinc-500">
-                AI speaks with customers, answers questions, confirms orders,
-                and writes summaries.
+                AI speaks with customers, answers questions, confirms orders, and writes summaries.
               </p>
               <button className="mt-5 rounded-xl border border-white/10 px-4 py-2 text-sm text-zinc-300">
                 Configure Voice
@@ -270,67 +264,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Orders queue</h3>
-              <p className="text-sm text-zinc-500">
-                {started ? "Auto confirmation started" : "Waiting for CSV"}
-              </p>
-            </div>
-
-            <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
-              <table className="min-w-[900px] w-full text-left text-sm">
-                <thead className="bg-white/[0.04] text-zinc-500">
-                  <tr>
-                    <th className="p-3">Name</th>
-                    <th className="p-3">Phone</th>
-                    <th className="p-3">Product</th>
-                    <th className="p-3">City</th>
-                    <th className="p-3">Price</th>
-                    <th className="p-3">Status</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-{filteredOrders.length === 0 ? (                    <tr>
-                      <td colSpan={6} className="p-6 text-center text-zinc-500">
-                        Upload a CSV file to start.
-                      </td>
-                    </tr>
-                  ) : (
-filteredOrders.map((order) => (                      <tr
-                        key={order.id}
-                        className="border-t border-white/10 text-zinc-300"
-                      >
-                        <td className="p-3">{order.customer?.name}</td>
-<td className="p-3">{order.customer?.phone}</td>
-                        <td className="p-3">{order.product}</td>
-<td className="p-3">{order.customer?.city}</td>                        <td className="p-3">{order.price}</td>
-                        <td className="p-3">
-                          <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs">
-                            {order.status === "Confirmed" ? (
-                              <CheckCircle2
-                                size={14}
-                                className="text-[#10A37F]"
-                              />
-                            ) : order.status === "Ready" ? (
-                              <ShieldCheck
-                                size={14}
-                                className="text-zinc-500"
-                              />
-                            ) : (
-                              <Clock3 size={14} className="text-zinc-500" />
-                            )}
-                            {order.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <OrdersTable orders={filteredOrders} />
         </section>
       </main>
     </div>
