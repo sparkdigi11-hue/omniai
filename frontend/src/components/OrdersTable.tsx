@@ -22,6 +22,7 @@ export default function OrdersTable({ orders }: Props) {
   statusFilter === "All"
     ? orders
     : orders.filter((order) => order.status === statusFilter);
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   return (
     <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
       <div className="flex items-center justify-between">
@@ -36,16 +37,17 @@ export default function OrdersTable({ orders }: Props) {
     <button
       key={status}
       onClick={() => setStatusFilter(status)}
-      className={`rounded-lg px-3 py-2 text-xs ${
+      className={`rounded-lg px-3 py-1.5 text-xs transition ${
         statusFilter === status
           ? "bg-white text-black"
-          : "bg-white/5 text-zinc-400"
+          : "bg-white/5 text-zinc-400 hover:bg-white/10"
       }`}
     >
       {status}
     </button>
   ))}
 </div>
+        
 
         <p className="text-sm text-zinc-500">{orders.length} orders</p>
       </div>
@@ -72,7 +74,11 @@ export default function OrdersTable({ orders }: Props) {
               </tr>
             ) : (
               displayedOrders.map((order) => (
-                <tr key={order.id} className="border-t border-white/10 text-zinc-300">
+                <tr
+  key={order.id}
+  onClick={() => setSelectedOrder(order)}
+  className="cursor-pointer border-t border-white/10 text-zinc-300 hover:bg-white/[0.03]"
+>
                   <td className="p-3">{order.customer?.name ?? "-"}</td>
                   <td className="p-3">{order.customer?.phone ?? "-"}</td>
                   <td className="p-3">{order.product}</td>
@@ -101,6 +107,27 @@ export default function OrdersTable({ orders }: Props) {
           </tbody>
         </table>
       </div>
+      {selectedOrder && (
+  <div className="fixed right-0 top-0 z-50 h-screen w-[380px] border-l border-white/10 bg-[#121214] p-6 shadow-2xl">
+    <button
+      onClick={() => setSelectedOrder(null)}
+      className="mb-6 rounded-lg bg-white/10 px-3 py-1 text-sm text-zinc-300"
+    >
+      Close
+    </button>
+
+    <h2 className="text-xl font-semibold">Order Details</h2>
+
+    <div className="mt-6 space-y-4 text-sm">
+      <p><span className="text-zinc-500">Name:</span> {selectedOrder.customer?.name}</p>
+      <p><span className="text-zinc-500">Phone:</span> {selectedOrder.customer?.phone}</p>
+      <p><span className="text-zinc-500">City:</span> {selectedOrder.customer?.city}</p>
+      <p><span className="text-zinc-500">Product:</span> {selectedOrder.product}</p>
+      <p><span className="text-zinc-500">Price:</span> {selectedOrder.price}</p>
+      <p><span className="text-zinc-500">Status:</span> {selectedOrder.status}</p>
+    </div>
+  </div>
+)}
     </div>
   );
 }
