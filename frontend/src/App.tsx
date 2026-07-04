@@ -39,18 +39,26 @@ type MenuItem = [string, LucideIcon];
 
 export default function App() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [started, setStarted] = useState(false);
+  const [, setStarted] = useState(false);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadOrders() {
+  async function loadOrders() {
+    try {
       const response = await fetch("http://localhost:4000/orders");
       const data = await response.json();
-      setOrders(data);
-    }
 
-    loadOrders();
-  }, []);
+      setOrders(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  loadOrders();
+}, []);
 
   const menu: MenuItem[] = [
     ["Dashboard", Brain],
@@ -68,21 +76,34 @@ export default function App() {
     ["Billing", CreditCard],
   ];
 
-  function startAutoCalls() {
-    setStarted(true);
+  async function startAutoCalls() {
+  setStarted(true);
 
+  const response = await fetch("http://localhost:4000/orders/auto-confirm", {
+    method: "POST",
+  });
+
+  const data = await response.json();
+
+  setOrders(data);
+  setLoading(false);
+}
+    async function updateOrderStatus(orderId: string, status: string) {
+  await fetch(`http://localhost:4000/orders/status/${orderId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      status,
+    }),
+  });
+
+  
     setOrders((prev) =>
-      prev.map((order, index) => ({
-        ...order,
-        status:
-          index % 4 === 0
-            ? "Confirmed"
-            : index % 4 === 1
-            ? "No Answer"
-            : index % 4 === 2
-            ? "Callback"
-            : "Confirmed",
-      }))
+      prev.map((order) =>
+        order.id === orderId ? { ...order, status } : order
+      )
     );
   }
 
@@ -100,6 +121,13 @@ export default function App() {
       (order.customer?.city ?? "").toLowerCase().includes(q)
     );
   });
+  if (loading) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#0b0b0c]">
+      <p className="text-zinc-500">Loading OmniAI...</p>
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-[#0b0b0c] text-white">
@@ -173,7 +201,13 @@ export default function App() {
           </div>
 
           <div className="mt-8 rounded-3xl border border-white/10 bg-[#121214] p-5">
-            <AddTestOrder />
+            <AddTestOrder
+  onOrderAdded={async () => {
+    const response = await fetch("http://localhost:4000/orders");
+    const data = await response.json();
+    setOrders(data);
+  }}
+/>
 
             <div className="mt-5 flex items-center justify-between gap-4">
               <div>
@@ -264,7 +298,10 @@ export default function App() {
             </div>
           </div>
 
-          <OrdersTable orders={filteredOrders} />
+          <OrdersTable
+  orders={filteredOrders}
+  onUpdateStatus={updateOrderStatus}
+/>
         </section>
       </main>
     </div>

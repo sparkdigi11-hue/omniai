@@ -14,15 +14,17 @@ type Order = {
 
 type Props = {
   orders: Order[];
+  onUpdateStatus: (orderId: string, status: string) => void;
 };
 
-export default function OrdersTable({ orders }: Props) {
+export default function OrdersTable({ orders, onUpdateStatus }: Props) {
   const [statusFilter, setStatusFilter] = useState("All");
   const displayedOrders =
   statusFilter === "All"
     ? orders
     : orders.filter((order) => order.status === statusFilter);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [orderStatus, setOrderStatus] = useState("");
   return (
     <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
       <div className="flex items-center justify-between">
@@ -76,7 +78,10 @@ export default function OrdersTable({ orders }: Props) {
               displayedOrders.map((order) => (
                 <tr
   key={order.id}
-  onClick={() => setSelectedOrder(order)}
+  onClick={() => {
+  setSelectedOrder(order);
+  setOrderStatus(order.status);
+}}
   className="cursor-pointer border-t border-white/10 text-zinc-300 hover:bg-white/[0.03]"
 >
                   <td className="p-3">{order.customer?.name ?? "-"}</td>
@@ -124,7 +129,22 @@ export default function OrdersTable({ orders }: Props) {
       <p><span className="text-zinc-500">City:</span> {selectedOrder.customer?.city}</p>
       <p><span className="text-zinc-500">Product:</span> {selectedOrder.product}</p>
       <p><span className="text-zinc-500">Price:</span> {selectedOrder.price}</p>
-      <p><span className="text-zinc-500">Status:</span> {selectedOrder.status}</p>
+      <div className="mt-4">
+  <label className="mb-2 block text-zinc-500">Status</label>
+
+  <select
+    value={orderStatus}
+    onChange={(e) => {
+  setOrderStatus(e.target.value);
+  onUpdateStatus(selectedOrder.id, e.target.value);
+}}
+    className="w-full rounded-lg border border-white/10 bg-white/5 p-2"
+  >
+    <option>Confirmed</option>
+    <option>No Answer</option>
+    <option>Callback</option>
+  </select>
+</div>
     </div>
   </div>
 )}

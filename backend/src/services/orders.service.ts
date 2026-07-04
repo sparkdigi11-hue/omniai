@@ -43,3 +43,51 @@ export async function createOrder(data: {
     },
   });
 }
+export async function updateOrderStatusById(orderId: string, status: string) {
+  return prisma.order.update({
+    where: {
+      id: orderId,
+    },
+    data: {
+      status,
+    },
+    include: {
+      customer: true,
+      workspace: true,
+    },
+  });
+}
+export async function autoConfirmAllOrders() {
+  const orders = await prisma.order.findMany({
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  await Promise.all(
+    orders.map((order, index) =>
+      prisma.order.update({
+        where: {
+          id: order.id,
+        },
+        data: {
+          status:
+            index % 4 === 0
+              ? "Confirmed"
+              : index % 4 === 1
+              ? "No Answer"
+              : index % 4 === 2
+              ? "Callback"
+              : "Confirmed",
+        },
+      })
+    )
+  );
+
+  return prisma.order.findMany({
+    include: {
+      customer: true,
+      workspace: true,
+    },
+  });
+}
