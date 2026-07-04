@@ -6,6 +6,9 @@ export async function getOrders() {
       customer: true,
       workspace: true,
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 }
 
@@ -41,8 +44,13 @@ export async function createOrder(data: {
       product: data.product,
       price: data.price,
     },
+    include: {
+      customer: true,
+      workspace: true,
+    },
   });
 }
+
 export async function updateOrderStatusById(orderId: string, status: string) {
   return prisma.order.update({
     where: {
@@ -57,6 +65,31 @@ export async function updateOrderStatusById(orderId: string, status: string) {
     },
   });
 }
+
+export async function updateOrderManagementById(
+  orderId: string,
+  data: {
+    notes?: string;
+    aiSummary?: string;
+    callbackAt?: string | null;
+  }
+) {
+  return prisma.order.update({
+    where: {
+      id: orderId,
+    },
+    data: {
+      notes: data.notes,
+      aiSummary: data.aiSummary,
+      callbackAt: data.callbackAt ? new Date(data.callbackAt) : null,
+    },
+    include: {
+      customer: true,
+      workspace: true,
+    },
+  });
+}
+
 export async function autoConfirmAllOrders() {
   const orders = await prisma.order.findMany({
     orderBy: {
@@ -88,6 +121,9 @@ export async function autoConfirmAllOrders() {
     include: {
       customer: true,
       workspace: true,
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   });
 }

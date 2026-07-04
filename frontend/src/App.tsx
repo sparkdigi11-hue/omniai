@@ -301,6 +301,13 @@ export default function App() {
           <OrdersTable
   orders={filteredOrders}
   onUpdateStatus={updateOrderStatus}
+  onOrderUpdated={(updatedOrder) => {
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === updatedOrder.id ? updatedOrder : order
+      )
+    );
+  }}
 />
         </section>
       </main>

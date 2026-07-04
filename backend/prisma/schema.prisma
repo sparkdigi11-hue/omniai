@@ -37,7 +37,10 @@ model Order {
   price       String?
   status      String   @default("Pending")
   aiSummary   String?
+  notes       String?
+  callbackAt  DateTime?
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
   customer  Customer  @relation(fields: [customerId], references: [id])
