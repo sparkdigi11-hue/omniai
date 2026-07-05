@@ -89,23 +89,27 @@ export default function App() {
   setLoading(false);
 }
     async function updateOrderStatus(orderId: string, status: string) {
-  await fetch(`http://localhost:4000/orders/status/${orderId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      status,
-    }),
-  });
+  const response = await fetch(
+    `http://localhost:4000/orders/status/${orderId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        status,
+      }),
+    }
+  );
 
-  
-    setOrders((prev) =>
-      prev.map((order) =>
-        order.id === orderId ? { ...order, status } : order
-      )
-    );
-  }
+  const updatedOrder = await response.json();
+
+  setOrders((prev) =>
+    prev.map((order) =>
+      order.id === orderId ? updatedOrder : order
+    )
+  );
+}
 
   const confirmed = orders.filter((order) => order.status === "Confirmed").length;
   const noAnswer = orders.filter((order) => order.status === "No Answer").length;

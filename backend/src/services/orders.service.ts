@@ -3,9 +3,14 @@ import prisma from "../prisma/client";
 export async function getOrders() {
   return prisma.order.findMany({
     include: {
-      customer: true,
-      workspace: true,
+  customer: true,
+  workspace: true,
+  events: {
+    orderBy: {
+      createdAt: "desc",
     },
+  },
+},
     orderBy: {
       createdAt: "desc",
     },
@@ -47,21 +52,48 @@ export async function createOrder(data: {
     include: {
       customer: true,
       workspace: true,
+      events: {
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
     },
   });
 }
 
 export async function updateOrderStatusById(orderId: string, status: string) {
+  const currentOrder = await prisma.order.findUnique({
+    where: {
+      id: orderId,
+    },
+  });
+
+  if (!currentOrder) {
+    throw new Error("Order not found");
+  }
+
   return prisma.order.update({
     where: {
       id: orderId,
     },
     data: {
       status,
+      events: {
+        create: {
+          type: "STATUS",
+          title: "Status changed",
+          description: `${currentOrder.status} → ${status}`,
+        },
+      },
     },
     include: {
       customer: true,
       workspace: true,
+      events: {
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
     },
   });
 }
@@ -84,9 +116,14 @@ export async function updateOrderManagementById(
       callbackAt: data.callbackAt ? new Date(data.callbackAt) : null,
     },
     include: {
-      customer: true,
-      workspace: true,
+  customer: true,
+  workspace: true,
+  events: {
+    orderBy: {
+      createdAt: "desc",
     },
+  },
+},
   });
 }
 
@@ -121,6 +158,11 @@ export async function autoConfirmAllOrders() {
     include: {
       customer: true,
       workspace: true,
+      events: {
+  orderBy: {
+    createdAt: "desc",
+  },
+},
     },
     orderBy: {
       createdAt: "desc",

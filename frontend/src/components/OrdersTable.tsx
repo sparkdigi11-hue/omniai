@@ -8,6 +8,13 @@ type Order = {
   notes?: string | null;
   aiSummary?: string | null;
   callbackAt?: string | null;
+  events?: {
+  id: string;
+  type: string;
+  title: string;
+  description?: string | null;
+  createdAt: string;
+}[];
   customer?: {
     name?: string;
     phone?: string;
@@ -171,17 +178,37 @@ export default function OrdersTable({ orders, onUpdateStatus, onOrderUpdated }: 
             <div>
               <label className="mb-2 block text-zinc-500">Status</label>
               <select
-                value={orderStatus}
-                onChange={(e) => {
-                  setOrderStatus(e.target.value);
-                  onUpdateStatus(selectedOrder.id, e.target.value);
-                }}
-                className="w-full rounded-lg border border-white/10 bg-white/5 p-2"
-              >
-                <option>Confirmed</option>
-                <option>No Answer</option>
-                <option>Callback</option>
-              </select>
+  value={orderStatus}
+  onChange={async (e) => {
+    const newStatus = e.target.value;
+
+    setOrderStatus(newStatus);
+
+    const response = await fetch(
+      `http://localhost:4000/orders/status/${selectedOrder.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      }
+    );
+
+    const updatedOrder = await response.json();
+
+    alert(`Events count: ${updatedOrder.events?.length ?? 0}`);
+
+    setSelectedOrder(updatedOrder);
+    onOrderUpdated(updatedOrder);
+  }}
+  className="w-full rounded-lg border border-white/10 bg-white/5 p-2"
+>
+  <option>Pending</option>
+  <option>Confirmed</option>
+  <option>No Answer</option>
+  <option>Callback</option>
+</select>
             </div>
 
             <div>
@@ -213,6 +240,36 @@ export default function OrdersTable({ orders, onUpdateStatus, onOrderUpdated }: 
                 className="w-full rounded-lg border border-white/10 bg-white/5 p-3 outline-none"
               />
             </div>
+            <div>
+  <h3 className="mb-3 font-medium">Timeline</h3>
+
+  <div className="space-y-3">
+    {selectedOrder.events?.length ? (
+      selectedOrder.events.map((event) => (
+        <div
+          key={event.id}
+          className="rounded-xl border border-white/10 bg-white/[0.03] p-3"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium">{event.title}</p>
+
+            <span className="text-xs text-zinc-600">
+              {new Date(event.createdAt).toLocaleString()}
+            </span>
+          </div>
+
+          {event.description && (
+            <p className="mt-2 text-xs text-zinc-400">
+              {event.description}
+            </p>
+          )}
+        </div>
+      ))
+    ) : (
+      <p className="text-sm text-zinc-500">No activity yet.</p>
+    )}
+  </div>
+</div>
 
             <button
               type="button"

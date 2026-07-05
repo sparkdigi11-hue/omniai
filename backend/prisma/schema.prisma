@@ -44,6 +44,7 @@ model Order {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
   customer  Customer  @relation(fields: [customerId], references: [id])
+  events OrderEvent[]
 }
 
 model AIEmployee {
@@ -56,4 +57,14 @@ model AIEmployee {
   createdAt   DateTime @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
+}
+model OrderEvent {
+  id          String   @id @default(cuid())
+  orderId     String
+  type        String
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
 }

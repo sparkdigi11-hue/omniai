@@ -19,4 +19,6 @@ router.put("/status/:id", updateOrderStatus);
 
 router.patch("/:id/management", updateOrderManagement);
 
+router.put("/status/:id", updateOrderStatus);
+
 export default router;
