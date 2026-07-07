@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import AIEmployees from "./components/AIEmployees";
 import AddTestOrder from "./components/AddTestOrder";
 import OrdersTable from "./components/OrdersTable";
 import {
@@ -41,6 +42,7 @@ export default function App() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [, setStarted] = useState(false);
   const [search, setSearch] = useState("");
+  const [activePage, setActivePage] = useState("Dashboard");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -142,15 +144,17 @@ export default function App() {
         </div>
 
         <nav className="mt-4 space-y-1 pb-8">
-          {menu.map(([label, Icon], index) => (
-            <button
-              key={label}
-              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
-                index === 0
-                  ? "bg-white/10 text-white"
-                  : "text-zinc-400 hover:bg-white/5 hover:text-white"
-              }`}
-            >
+          {menu.map(([label, Icon]) => (
+  <button
+    key={label}
+    type="button"
+    onClick={() => setActivePage(label)}
+    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
+      activePage === label
+        ? "bg-white/10 text-white"
+        : "text-zinc-400 hover:bg-white/5 hover:text-white"
+    }`}
+  >
               <Icon size={17} />
               <span>{label}</span>
             </button>
@@ -179,8 +183,12 @@ export default function App() {
             <div className="h-9 w-9 rounded-full bg-zinc-800" />
           </div>
         </header>
-
+  
         <section className="mx-auto max-w-6xl px-8 py-12">
+          {activePage === "AI Employees" ? (
+  <AIEmployees />
+) : (  
+  <>
           <p className="text-sm text-zinc-500">AI Communication Platform</p>
 
           <h2 className="mt-5 max-w-4xl text-5xl font-semibold leading-tight tracking-tight">
@@ -313,7 +321,10 @@ export default function App() {
     );
   }}
 />
-        </section>
+
+  </>
+)}
+</section>
       </main>
     </div>
   );

@@ -28,7 +28,7 @@ type Props = {
   onOrderUpdated: (updatedOrder: Order) => void;
 };
 
-export default function OrdersTable({ orders, onUpdateStatus, onOrderUpdated }: Props) {
+export default function OrdersTable({ orders, onOrderUpdated }: Props) {
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderStatus, setOrderStatus] = useState("");
