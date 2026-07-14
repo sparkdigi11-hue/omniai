@@ -15,6 +15,7 @@ model Workspace {
   customers  Customer[]
   orders     Order[]
   employees  AIEmployee[]
+  knowledgeItems KnowledgeItem[]
 }
 
 model Customer {
@@ -54,6 +55,10 @@ model AIEmployee {
   role        String
   language    String
   status      String   @default("Online")
+  goal        String?
+  script      String?
+  rules String?
+  tools String?
   createdAt   DateTime @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
@@ -67,4 +72,15 @@ model OrderEvent {
   createdAt   DateTime @default(now())
 
   order Order @relation(fields: [orderId], references: [id])
+}
+model KnowledgeItem {
+  id          String   @id @default(cuid())
+  workspaceId String
+  title       String
+  content     String
+  category    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
 }

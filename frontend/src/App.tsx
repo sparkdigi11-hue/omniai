@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AIEmployees from "./components/AIEmployees";
 import AddTestOrder from "./components/AddTestOrder";
 import OrdersTable from "./components/OrdersTable";
+import KnowledgeBase from "./components/KnowledgeBase";
 import {
   Bell,
   Bot,
@@ -187,7 +188,9 @@ export default function App() {
         <section className="mx-auto max-w-6xl px-8 py-12">
           {activePage === "AI Employees" ? (
   <AIEmployees />
-) : (  
+) : activePage === "Knowledge Base" ? (
+  <KnowledgeBase />
+) : (
   <>
           <p className="text-sm text-zinc-500">AI Communication Platform</p>
 
