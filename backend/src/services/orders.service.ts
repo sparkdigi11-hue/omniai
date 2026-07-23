@@ -43,12 +43,13 @@ export async function createOrder(data: {
   });
 
   return prisma.order.create({
-    data: {
-      workspaceId: workspace.id,
-      customerId: customer.id,
-      product: data.product,
-      price: data.price,
-    },
+  data: {
+    workspaceId: workspace.id,
+    customerId: customer.id,
+    product: data.product,
+    price: data.price,
+    callStatus: "Pending",
+  },
     include: {
       customer: true,
       workspace: true,
@@ -167,5 +168,154 @@ export async function autoConfirmAllOrders() {
     orderBy: {
       createdAt: "desc",
     },
+  });
+}
+export async function updateOrderById(
+  orderId: string,
+  data: {
+    name?: string;
+    phone?: string;
+    city?: string;
+    product?: string;
+    price?: string | number;
+  }
+) {
+  const order = await prisma.order.findUnique({
+    where: {
+      id: orderId,
+    },
+    include: {
+      customer: true,
+    },
+  });
+
+  if (!order) {
+    throw new Error("Order not found");
+  }
+
+  return prisma.$transaction(async (transaction) => {
+    if (
+      data.name !== undefined ||
+      data.phone !== undefined ||
+      data.city !== undefined
+    ) {
+      await transaction.customer.update({
+        where: {
+          id: order.customerId,
+        },
+        data: {
+          name: data.name,
+          phone: data.phone,
+          city: data.city,
+        },
+      });
+    }
+
+    return transaction.order.update({
+      where: {
+        id: orderId,
+      },
+      data: {
+        product: data.product,
+        price:
+          data.price !== undefined
+            ? String(data.price)
+            : undefined,
+      },
+      include: {
+        customer: true,
+        workspace: true,
+        events: {
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
+    });
+  });
+}
+
+export async function deleteOrderById(orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: {
+      id: orderId,
+    },
+  });
+
+  if (!order) {
+    throw new Error("Order not found");
+  }
+
+  await prisma.order.delete({
+    where: {
+      id: orderId,
+    },
+  });
+
+  return {
+    success: true,
+    message: "Order deleted successfully",
+  };
+}
+
+export async function startOrderCallById(orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: {
+      id: orderId,
+    },
+    include: {
+      customer: true,
+    },
+  });
+
+  if (!order) {
+    throw new Error("Order not found");
+  }
+
+  const existingPendingCall = await prisma.call.findFirst({
+    where: {
+      orderId,
+      status: {
+        in: ["Pending", "In Progress"],
+      },
+    },
+  });
+
+  if (existingPendingCall) {
+    throw new Error(
+      "This order already has a pending or active call"
+    );
+  }
+
+  return prisma.$transaction(async (transaction) => {
+    const call = await transaction.call.create({
+      data: {
+        workspaceId: order.workspaceId,
+        orderId: order.id,
+        customer: order.customer.name,
+        phone: order.customer.phone,
+        product: order.product,
+        aiEmployee: "Default AI",
+        status: "Pending",
+      },
+    });
+
+    await transaction.order.update({
+      where: {
+        id: order.id,
+      },
+      data: {
+        callStatus: "In Progress",
+        events: {
+          create: {
+            type: "CALL",
+            title: "AI call started",
+            description: "The order was sent to the AI calling queue.",
+          },
+        },
+      },
+    });
+
+    return call;
   });
 }

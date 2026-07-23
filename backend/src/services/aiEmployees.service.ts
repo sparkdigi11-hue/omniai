@@ -15,6 +15,7 @@ export async function createAIEmployee(data: {
   goal?: string;
   script?: string;
   tools?: string;
+  knowledgeItemIds?: string;
 rules?: string;}) {
   const workspace = await prisma.workspace.upsert({
     where: { id: "test-workspace" },
@@ -35,6 +36,7 @@ rules?: string;}) {
   script: data.script,
   tools: data.tools,
   rules: data.rules,
+  knowledgeItemIds: data.knowledgeItemIds,
 },
   });
 }
@@ -48,6 +50,7 @@ export async function updateAIEmployeeById(
     script?: string;
     rules?: string;
     tools?: string;
+    knowledgeItemIds?: string;
   }
 ) {
   return prisma.aIEmployee.update({
@@ -55,5 +58,14 @@ export async function updateAIEmployeeById(
       id: employeeId,
     },
     data,
+  });
+}
+export async function deleteAIEmployeeById(
+  employeeId: string
+) {
+  return prisma.aIEmployee.delete({
+    where: {
+      id: employeeId,
+    },
   });
 }

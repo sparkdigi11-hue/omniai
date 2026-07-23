@@ -3,6 +3,7 @@ import {
   getAIEmployees,
   createAIEmployee,
   updateAIEmployeeById,
+  deleteAIEmployeeById,
 } from "../services/aiEmployees.service";
 
 export async function getAllAIEmployees(
@@ -30,4 +31,14 @@ export async function updateAIEmployee(
   const employee = await updateAIEmployeeById(id, req.body);
 
   res.json(employee);
+}
+export async function deleteAIEmployee(
+  req: Request,
+  res: Response
+) {
+  const id = req.params.id as string;
+
+  await deleteAIEmployeeById(id);
+
+  res.status(204).send();
 }

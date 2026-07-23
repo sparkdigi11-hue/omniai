@@ -5,6 +5,9 @@ import {
   updateOrderStatusById,
   updateOrderManagementById,
   autoConfirmAllOrders,
+  updateOrderById,
+  deleteOrderById,
+  startOrderCallById,
 } from "../services/orders.service";
 
 export async function getAllOrders(_req: Request, res: Response) {
@@ -41,4 +44,60 @@ export async function updateOrderManagement(req: Request, res: Response) {
 export async function autoConfirmOrders(_req: Request, res: Response) {
   const orders = await autoConfirmAllOrders();
   res.json(orders);
+}
+export async function updateOrder(req: Request, res: Response) {
+  try {
+    const id = req.params.id as string;
+
+    const order = await updateOrderById(id, req.body);
+
+    res.json(order);
+  } catch (error) {
+    console.error(error);
+
+    res.status(400).json({
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to update order",
+    });
+  }
+}
+
+export async function deleteOrder(req: Request, res: Response) {
+  try {
+    const id = req.params.id as string;
+
+    const result = await deleteOrderById(id);
+
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+
+    res.status(400).json({
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to delete order",
+    });
+  }
+}
+
+export async function startOrderCall(req: Request, res: Response) {
+  try {
+    const id = req.params.id as string;
+
+    const call = await startOrderCallById(id);
+
+    res.status(201).json(call);
+  } catch (error) {
+    console.error(error);
+
+    res.status(400).json({
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to start AI call",
+    });
+  }
 }

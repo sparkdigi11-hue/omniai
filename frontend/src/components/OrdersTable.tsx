@@ -5,6 +5,7 @@ type Order = {
   product: string;
   price: string;
   status: string;
+callStatus: string;
   notes?: string | null;
   aiSummary?: string | null;
   callbackAt?: string | null;
@@ -37,9 +38,9 @@ export default function OrdersTable({ orders, onOrderUpdated }: Props) {
   const [callbackAt, setCallbackAt] = useState("");
 
   const displayedOrders =
-    statusFilter === "All"
-      ? orders
-      : orders.filter((order) => order.status === statusFilter);
+  statusFilter === "All"
+    ? orders
+    : orders.filter((order) => order.callStatus === statusFilter);
 
   async function saveManagement() {
     if (!selectedOrder) return;
@@ -121,7 +122,7 @@ export default function OrdersTable({ orders, onOrderUpdated }: Props) {
                   key={order.id}
                   onClick={() => {
                     setSelectedOrder(order);
-                    setOrderStatus(order.status);
+                   setOrderStatus(order.callStatus);
                     setNotes(order.notes ?? "");
                     setAiSummary(order.aiSummary ?? "");
                     setCallbackAt(order.callbackAt?.slice(0, 16) ?? "");
@@ -134,22 +135,24 @@ export default function OrdersTable({ orders, onOrderUpdated }: Props) {
                   <td className="p-3">{order.customer?.city ?? "-"}</td>
                   <td className="p-3">{order.price}</td>
                   <td className="p-3">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        order.status === "Confirmed"
-                          ? "bg-green-500/20 text-green-400"
-                          : order.status === "Pending"
-                          ? "bg-yellow-500/20 text-yellow-400"
-                          : order.status === "No Answer"
-                          ? "bg-red-500/20 text-red-400"
-                          : order.status === "Callback"
-                          ? "bg-blue-500/20 text-blue-400"
-                          : "bg-white/10 text-zinc-300"
-                      }`}
-                    >
-                      {order.status}
-                    </span>
-                  </td>
+  <span
+    className={`rounded-full px-3 py-1 text-xs font-medium ${
+      order.callStatus === "Confirmed"
+        ? "bg-green-500/20 text-green-400"
+        : order.callStatus === "Pending"
+        ? "bg-yellow-500/20 text-yellow-400"
+        : order.callStatus === "In Progress"
+        ? "bg-blue-500/20 text-blue-400"
+        : order.callStatus === "No Answer"
+        ? "bg-red-500/20 text-red-400"
+        : order.callStatus === "Callback"
+        ? "bg-blue-500/20 text-blue-400"
+        : "bg-white/10 text-zinc-300"
+    }`}
+  >
+    {order.callStatus}
+  </span>
+</td>
                 </tr>
               ))
             )}

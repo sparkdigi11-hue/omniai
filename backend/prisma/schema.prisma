@@ -16,6 +16,7 @@ model Workspace {
   orders     Order[]
   employees  AIEmployee[]
   knowledgeItems KnowledgeItem[]
+   calls          Call[]
 }
 
 model Customer {
@@ -24,6 +25,8 @@ model Customer {
   name        String
   phone       String
   city        String?
+  aiSummary   String?
+  aiInsights  String?
   createdAt   DateTime @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
@@ -37,6 +40,7 @@ model Order {
   product     String
   price       String?
   status      String   @default("Pending")
+  callStatus String @default("Pending")
   aiSummary   String?
   notes       String?
   callbackAt  DateTime?
@@ -46,6 +50,8 @@ model Order {
   workspace Workspace @relation(fields: [workspaceId], references: [id])
   customer  Customer  @relation(fields: [customerId], references: [id])
   events OrderEvent[]
+  conversations Conversation[]
+  calls Call[]
 }
 
 model AIEmployee {
@@ -59,6 +65,8 @@ model AIEmployee {
   script      String?
   rules String?
   tools String?
+  conversations Conversation[]
+  knowledgeItemIds String?
   createdAt   DateTime @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
@@ -83,4 +91,61 @@ model KnowledgeItem {
   updatedAt   DateTime @default(now()) @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
+}
+model Conversation {
+  id           String   @id @default(cuid())
+  orderId      String
+  aiEmployeeId String?
+  mode String @default("AI")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  order      Order             @relation(fields: [orderId], references: [id])
+  aiEmployee AIEmployee?       @relation(fields: [aiEmployeeId], references: [id])
+  messages   ConversationMessage[]
+}
+
+model ConversationMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  sender         String
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+}
+model Product {
+  id             String   @id @default(cuid())
+  name           String
+  price          String
+  stock          String
+  category       String
+  description    String
+  sku            String
+  deliveryTime   String
+  aiInstructions String
+  status         String   @default("Active")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Call {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  orderId      String?
+  customer     String
+  phone        String
+  product      String
+  aiEmployee   String
+  status       String   @default("Pending")
+  duration     String   @default("00:00")
+  transcript   String?
+  summary      String?
+  recordingUrl String?
+  confidence   Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  order     Order?     @relation(fields: [orderId], references: [id], onDelete: SetNull)
 }

@@ -10,6 +10,13 @@ type AIEmployee = {
   script?: string | null;
   rules?: string | null;
   tools?: string | null;
+  knowledgeItemIds?: string | null;
+};
+
+type KnowledgeItem = {
+  id: string;
+  title: string;
+  category: string;
 };
 
 const availableTools = [
@@ -36,7 +43,7 @@ const availableLanguages = [
   "Spanish",
 ];
 
-function parseTools(value?: string | null): string[] {
+function parseStringArray(value?: string | null): string[] {
   if (!value) return [];
 
   try {
@@ -49,6 +56,7 @@ function parseTools(value?: string | null): string[] {
 
 export default function AIEmployees() {
   const [employees, setEmployees] = useState<AIEmployee[]>([]);
+  const [knowledgeItems, setKnowledgeItems] = useState<KnowledgeItem[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   const [name, setName] = useState("");
@@ -58,6 +66,7 @@ export default function AIEmployees() {
   const [script, setScript] = useState("");
   const [rules, setRules] = useState("");
   const [tools, setTools] = useState<string[]>([]);
+  const [knowledgeItemIds, setKnowledgeItemIds] = useState<string[]>([]);
 
   const [selectedEmployee, setSelectedEmployee] =
     useState<AIEmployee | null>(null);
@@ -71,6 +80,8 @@ export default function AIEmployees() {
   const [editScript, setEditScript] = useState("");
   const [editRules, setEditRules] = useState("");
   const [editTools, setEditTools] = useState<string[]>([]);
+  const [editKnowledgeItemIds, setEditKnowledgeItemIds] =
+    useState<string[]>([]);
 
   useEffect(() => {
     async function loadEmployees() {
@@ -90,7 +101,25 @@ export default function AIEmployees() {
       }
     }
 
+    async function loadKnowledgeItems() {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/knowledge"
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load knowledge items");
+        }
+
+        const data: KnowledgeItem[] = await response.json();
+        setKnowledgeItems(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
     loadEmployees();
+    loadKnowledgeItems();
   }, []);
 
   async function createEmployee() {
@@ -115,6 +144,7 @@ export default function AIEmployees() {
             script,
             rules,
             tools: JSON.stringify(tools),
+            knowledgeItemIds: JSON.stringify(knowledgeItemIds),
           }),
         }
       );
@@ -134,6 +164,7 @@ export default function AIEmployees() {
       setScript("");
       setRules("");
       setTools([]);
+      setKnowledgeItemIds([]);
       setShowCreateForm(false);
     } catch (error) {
       console.error(error);
@@ -150,7 +181,14 @@ export default function AIEmployees() {
     setEditGoal(selectedEmployee.goal ?? "");
     setEditScript(selectedEmployee.script ?? "");
     setEditRules(selectedEmployee.rules ?? "");
-    setEditTools(parseTools(selectedEmployee.tools));
+
+    setEditTools(
+      parseStringArray(selectedEmployee.tools)
+    );
+
+    setEditKnowledgeItemIds(
+      parseStringArray(selectedEmployee.knowledgeItemIds)
+    );
 
     setIsEditing(true);
   }
@@ -179,6 +217,7 @@ export default function AIEmployees() {
             script: editScript,
             rules: editRules,
             tools: JSON.stringify(editTools),
+            knowledgeItemIds: JSON.stringify(editKnowledgeItemIds),
           }),
         }
       );
@@ -209,12 +248,54 @@ export default function AIEmployees() {
     setSelectedEmployee(null);
     setIsEditing(false);
   }
+  async function deleteEmployee() {
+  if (!selectedEmployee) return;
+
+  const confirmed = window.confirm(
+    `Are you sure you want to delete "${selectedEmployee.name}"?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch(
+      `http://localhost:4000/ai-employees/${selectedEmployee.id}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to delete employee");
+    }
+
+    setEmployees((prev) =>
+      prev.filter(
+        (employee) => employee.id !== selectedEmployee.id
+      )
+    );
+
+    closeDrawer();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to delete employee.");
+  }
+}
+  const activeEmployees = employees.filter(
+  (employee) => employee.status === "Active"
+).length;
+
+const languagesCount = new Set(
+  employees.map((employee) => employee.language)
+).size;
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold">AI Employees</h1>
+          <h1 className="text-3xl font-semibold">
+            AI Employees
+          </h1>
 
           <p className="mt-2 text-zinc-500">
             Manage your AI agents for calls, WhatsApp, support,
@@ -225,17 +306,55 @@ export default function AIEmployees() {
         <button
           type="button"
           onClick={() => setShowCreateForm((prev) => !prev)}
-          className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-black"
+          className="w-full rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-zinc-200 sm:w-auto"
         >
-          {showCreateForm ? "Close Form" : "+ Create AI Employee"}
+          {showCreateForm
+            ? "Close Form"
+            : "+ Create AI Employee"}
         </button>
       </div>
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  {[
+    ["Total Employees", employees.length],
+    ["Active", activeEmployees],
+    ["Languages", languagesCount],
+    ["Knowledge Items", knowledgeItems.length],
+  ].map(([title, value]) => (
+    <div
+      key={String(title)}
+      className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+    >
+      <p className="text-sm text-zinc-500">
+        {title}
+      </p>
 
+      <p className="mt-2 text-3xl font-semibold">
+        {value}
+      </p>
+    </div>
+  ))}
+</div>
       {showCreateForm && (
-        <div className="mt-6 rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-          <h2 className="text-lg font-medium">
-            Create AI Employee
-          </h2>
+        <div className="fixed right-0 top-0 z-50 h-screen w-full animate-in slide-in-from-right duration-300 overflow-y-auto border-l border-white/10 bg-[#121214] p-6 shadow-2xl sm:w-[520px]">
+         <div className="mb-6 flex items-center justify-between">
+  <div>
+    <h2 className="text-2xl font-semibold">
+      Create AI Employee
+    </h2>
+
+    <p className="mt-1 text-sm text-zinc-500">
+      Create and configure a new AI employee.
+    </p>
+  </div>
+
+  <button
+    type="button"
+    onClick={() => setShowCreateForm(false)}
+    className="rounded-lg border border-white/10 px-4 py-2 text-sm text-zinc-300 hover:bg-white/5"
+  >
+    Close
+  </button>
+</div>
 
           <input
             type="text"
@@ -264,7 +383,9 @@ export default function AIEmployees() {
             onChange={(event) => setLanguage(event.target.value)}
             className="mt-3 w-full rounded-xl border border-white/10 bg-[#18181b] p-3 text-white outline-none"
           >
-            <option value="">Select employee language</option>
+            <option value="">
+              Select employee language
+            </option>
 
             {availableLanguages.map((item) => (
               <option key={item} value={item}>
@@ -327,48 +448,151 @@ export default function AIEmployees() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={createEmployee}
-            className="mt-5 w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-black"
-          >
-            Create Employee
-          </button>
+          <div className="mt-6">
+            <p className="mb-3 text-sm text-zinc-500">
+              Knowledge Base Access
+            </p>
+
+            <div className="space-y-3">
+              {knowledgeItems.length === 0 ? (
+                <p className="text-sm text-zinc-500">
+                  No knowledge items available.
+                </p>
+              ) : (
+                knowledgeItems.map((item) => (
+                  <label
+                    key={item.id}
+                    className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={knowledgeItemIds.includes(item.id)}
+                      onChange={(event) => {
+                        if (event.target.checked) {
+                          setKnowledgeItemIds((prev) => [
+                            ...prev,
+                            item.id,
+                          ]);
+                        } else {
+                          setKnowledgeItemIds((prev) =>
+                            prev.filter((id) => id !== item.id)
+                          );
+                        }
+                      }}
+                    />
+
+                    <div>
+                      <p className="text-sm text-zinc-300">
+                        {item.title}
+                      </p>
+
+                      <p className="mt-1 text-xs text-zinc-500">
+                        {item.category}
+                      </p>
+                    </div>
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="mt-6 flex gap-3">
+  <button
+    type="button"
+    onClick={() => setShowCreateForm(false)}
+    className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-zinc-300 hover:bg-white/5"
+  >
+    Cancel
+  </button>
+
+  <button
+    type="button"
+    onClick={createEmployee}
+    className="flex-1 rounded-xl bg-white px-4 py-3 text-sm font-medium text-black hover:bg-zinc-200"
+  >
+    Create Employee
+  </button>
+</div>
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-3 gap-4">
+      <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {employees.length === 0 ? (
-          <div className="col-span-3 rounded-3xl border border-white/10 bg-white/[0.03] p-8 text-center text-zinc-500">
+         <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 text-center text-zinc-500 md:col-span-2 xl:col-span-3">
             No AI employees yet.
           </div>
         ) : (
           employees.map((employee) => (
-            <button
-              key={employee.id}
-              type="button"
-              onClick={() => {
-                setSelectedEmployee(employee);
-                setIsEditing(false);
-              }}
-              className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 text-left transition hover:bg-white/[0.06]"
-            >
-              <h3 className="text-lg font-medium">
-                {employee.name}
-              </h3>
+           <button
+  key={employee.id}
+  type="button"
+  onClick={() => {
+    setSelectedEmployee(employee);
+    setIsEditing(false);
+  }}
+  className="group rounded-3xl border border-white/10 bg-white/[0.03] p-6 text-left transition hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.06]"
+>
+  <div className="flex items-start justify-between gap-4">
+    <div className="flex items-center gap-3">
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-lg font-semibold text-white">
+        {employee.name.charAt(0).toUpperCase()}
+      </div>
 
-              <p className="mt-2 text-sm text-zinc-500">
-                {employee.role}
-              </p>
+      <div>
+        <h3 className="text-lg font-medium text-white">
+          {employee.name}
+        </h3>
 
-              <p className="mt-1 text-sm text-zinc-500">
-                {employee.language}
-              </p>
+        <p className="mt-1 text-sm text-zinc-500">
+          {employee.role}
+        </p>
+      </div>
+    </div>
 
-              <span className="mt-4 inline-flex rounded-full bg-green-500/20 px-3 py-1 text-xs text-green-400">
-                {employee.status}
-              </span>
-            </button>
+    <span className="inline-flex rounded-full bg-green-500/15 px-3 py-1 text-xs font-medium text-green-400">
+      {employee.status}
+    </span>
+  </div>
+
+  <div className="mt-6 grid grid-cols-3 gap-3">
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+      <p className="text-xs text-zinc-500">Language</p>
+
+      <p className="mt-1 text-sm text-zinc-300">
+        {employee.language}
+      </p>
+    </div>
+
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+      <p className="text-xs text-zinc-500">Channels</p>
+
+      <p className="mt-1 text-sm text-zinc-300">
+        {parseStringArray(employee.tools).length}
+      </p>
+    </div>
+  </div>
+
+  <div className="mt-5 flex flex-wrap gap-2">
+    {parseStringArray(employee.tools).slice(0, 3).map((tool) => (
+      <span
+        key={tool}
+        className="rounded-full bg-white/10 px-3 py-1 text-xs text-zinc-400"
+      >
+        {tool}
+      </span>
+    ))}
+
+    {parseStringArray(employee.tools).length > 3 && (
+      <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-zinc-400">
+        +{parseStringArray(employee.tools).length - 3}
+      </span>
+    )}
+  </div>
+
+  <p className="mt-5 text-xs text-zinc-600 transition group-hover:text-zinc-400">
+    Click to view and edit
+  </p>
+</button>
           ))
         )}
       </div>
@@ -385,14 +609,24 @@ export default function AIEmployees() {
             </button>
 
             {!isEditing && (
-              <button
-                type="button"
-                onClick={openEditForm}
-                className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-black"
-              >
-                Edit Employee
-              </button>
-            )}
+  <>
+    <button
+      type="button"
+      onClick={openEditForm}
+      className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-black"
+    >
+      Edit Employee
+    </button>
+
+    <button
+      type="button"
+      onClick={deleteEmployee}
+      className="rounded-lg bg-red-500/15 px-3 py-1.5 text-sm font-medium text-red-400 hover:bg-red-500/25"
+    >
+      Delete Employee
+    </button>
+  </>
+)}
           </div>
 
           {isEditing ? (
@@ -417,7 +651,9 @@ export default function AIEmployees() {
                 }
                 className="mt-3 w-full rounded-xl border border-white/10 bg-[#18181b] p-3 text-white outline-none"
               >
-                <option value="">Select employee role</option>
+                <option value="">
+                  Select employee role
+                </option>
 
                 {availableRoles.map((item) => (
                   <option key={item} value={item}>
@@ -433,7 +669,9 @@ export default function AIEmployees() {
                 }
                 className="mt-3 w-full rounded-xl border border-white/10 bg-[#18181b] p-3 text-white outline-none"
               >
-                <option value="">Select employee language</option>
+                <option value="">
+                  Select employee language
+                </option>
 
                 {availableLanguages.map((item) => (
                   <option key={item} value={item}>
@@ -507,6 +745,58 @@ export default function AIEmployees() {
                 </div>
               </div>
 
+              <div className="mt-6">
+                <p className="mb-3 text-sm text-zinc-500">
+                  Knowledge Base Access
+                </p>
+
+                <div className="space-y-3">
+                  {knowledgeItems.length === 0 ? (
+                    <p className="text-sm text-zinc-500">
+                      No knowledge items available.
+                    </p>
+                  ) : (
+                    knowledgeItems.map((item) => (
+                      <label
+                        key={item.id}
+                        className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={editKnowledgeItemIds.includes(
+                            item.id
+                          )}
+                          onChange={(event) => {
+                            if (event.target.checked) {
+                              setEditKnowledgeItemIds((prev) => [
+                                ...prev,
+                                item.id,
+                              ]);
+                            } else {
+                              setEditKnowledgeItemIds((prev) =>
+                                prev.filter(
+                                  (id) => id !== item.id
+                                )
+                              );
+                            }
+                          }}
+                        />
+
+                        <div>
+                          <p className="text-sm text-zinc-300">
+                            {item.title}
+                          </p>
+
+                          <p className="mt-1 text-xs text-zinc-500">
+                            {item.category}
+                          </p>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+
               <div className="mt-5 flex gap-3">
                 <button
                   type="button"
@@ -540,7 +830,9 @@ export default function AIEmployees() {
               </p>
 
               <div className="mt-6">
-                <p className="text-sm text-zinc-500">Goal</p>
+                <p className="text-sm text-zinc-500">
+                  Goal
+                </p>
 
                 <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-300">
                   {selectedEmployee.goal ||
@@ -560,7 +852,9 @@ export default function AIEmployees() {
               </div>
 
               <div className="mt-6">
-                <p className="text-sm text-zinc-500">Rules</p>
+                <p className="text-sm text-zinc-500">
+                  Rules
+                </p>
 
                 <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-300">
                   {selectedEmployee.rules ||
@@ -574,9 +868,9 @@ export default function AIEmployees() {
                 </p>
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {parseTools(selectedEmployee.tools).length >
-                  0 ? (
-                    parseTools(selectedEmployee.tools).map(
+                  {parseStringArray(selectedEmployee.tools)
+                    .length > 0 ? (
+                    parseStringArray(selectedEmployee.tools).map(
                       (tool) => (
                         <span
                           key={tool}
@@ -589,6 +883,41 @@ export default function AIEmployees() {
                   ) : (
                     <p className="text-sm text-zinc-400">
                       No tools configured.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <p className="text-sm text-zinc-500">
+                  Knowledge Base Access
+                </p>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {parseStringArray(
+                    selectedEmployee.knowledgeItemIds
+                  ).length > 0 ? (
+                    parseStringArray(
+                      selectedEmployee.knowledgeItemIds
+                    ).map((itemId) => {
+                      const item = knowledgeItems.find(
+                        (knowledgeItem) =>
+                          knowledgeItem.id === itemId
+                      );
+
+                      return (
+                        <span
+                          key={itemId}
+                          className="rounded-full bg-white/10 px-3 py-1 text-xs text-zinc-300"
+                        >
+                          {item?.title ??
+                            "Unknown Knowledge Item"}
+                        </span>
+                      );
+                    })
+                  ) : (
+                    <p className="text-sm text-zinc-400">
+                      No knowledge access configured.
                     </p>
                   )}
                 </div>
